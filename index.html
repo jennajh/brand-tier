@@ -1,0 +1,968 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Goodwill Brand Tier Lookup</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: #f8fafc;
+      color: #0f172a;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      -webkit-font-smoothing: antialiased;
+    }
+    button, input, select { font-family: inherit; }
+    .hidden { display: none !important; }
+
+    /* Header */
+    .header {
+      width: 100%;
+      max-width: 36rem;
+      margin: 0 auto;
+      padding: 1.25rem 1rem 0.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .brand-title {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.875rem;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      color: #1e293b;
+    }
+    .brand-dot {
+      width: 0.625rem;
+      height: 0.625rem;
+      border-radius: 9999px;
+      background-color: #00539B;
+      display: inline-block;
+    }
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .link-btn {
+      background: none;
+      border: none;
+      padding: 0.25rem 0.375rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #64748b;
+      cursor: pointer;
+    }
+    .link-btn:hover { color: #0f172a; }
+
+    /* Main */
+    .main {
+      flex: 1;
+      width: 100%;
+      max-width: 36rem;
+      margin: 0 auto;
+      padding: 1rem 1rem 2.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    /* Search */
+    .search-wrap { position: relative; }
+    .search-icon {
+      position: absolute;
+      left: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 1.25rem;
+      height: 1.25rem;
+      color: #94a3b8;
+      pointer-events: none;
+    }
+    .search-input {
+      width: 100%;
+      padding: 1rem 3rem;
+      font-size: 1.125rem;
+      font-weight: 500;
+      background: #ffffff;
+      color: #0f172a;
+      border: 1px solid #e2e8f0;
+      border-radius: 1rem;
+      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .search-input:focus {
+      border-color: #00539B;
+      box-shadow: 0 0 0 4px rgba(0, 83, 155, 0.12);
+    }
+    .clear-btn {
+      position: absolute;
+      right: 0.875rem;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 2rem;
+      height: 2rem;
+      border-radius: 9999px;
+      border: none;
+      background: #f1f5f9;
+      color: #64748b;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+    .clear-btn:hover { background: #e2e8f0; color: #0f172a; }
+
+    /* Tier Colors */
+    .tier-good { background-color: #f1f5f9; color: #334155; border-color: #cbd5e1; }
+    .tier-better { background-color: #eff6ff; color: #1d4ed8; border-color: #bfdbfe; }
+    .tier-best { background-color: #ecfdf5; color: #047857; border-color: #a7f3d0; }
+    .tier-specialty { background-color: #fdf4ff; color: #86198f; border-color: #f0abfc; }
+
+    .badge-good { background-color: #475569; color: #ffffff; }
+    .badge-better { background-color: #2563eb; color: #ffffff; }
+    .badge-best { background-color: #059669; color: #ffffff; }
+    .badge-specialty { background-color: #9333ea; color: #ffffff; }
+
+    /* Hero Result Card */
+    .result-card {
+      border-width: 2px;
+      border-style: solid;
+      border-radius: 1.5rem;
+      padding: 1.5rem 1.25rem;
+      text-align: center;
+      box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
+    }
+    .result-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      opacity: 0.8;
+      margin-bottom: 0.75rem;
+    }
+    .edit-link {
+      background: none;
+      border: none;
+      color: inherit;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-decoration: underline;
+      cursor: pointer;
+      padding: 0;
+    }
+    .tier-pill-lg {
+      display: inline-block;
+      padding: 0.5rem 1.5rem;
+      border-radius: 9999px;
+      font-size: 1.75rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin: 0.25rem 0 0.75rem;
+    }
+    .result-def {
+      font-size: 0.875rem;
+      line-height: 1.45;
+      margin: 0 auto;
+      max-width: 26rem;
+      opacity: 0.9;
+    }
+    .result-note {
+      display: inline-block;
+      margin-top: 0.75rem;
+      padding: 0.375rem 0.75rem;
+      border-radius: 0.5rem;
+      background: rgba(255, 255, 255, 0.65);
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    /* Not Found */
+    .not-found-card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 1.25rem;
+      padding: 1.5rem;
+      text-align: center;
+    }
+    .not-found-badge {
+      display: inline-block;
+      padding: 0.25rem 0.75rem;
+      border-radius: 9999px;
+      background: #fef3c7;
+      color: #92400e;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .not-found-title { margin: 0.5rem 0 0.25rem; font-size: 1.25rem; font-weight: 700; }
+    .not-found-sub { margin: 0 0 1rem; font-size: 0.875rem; color: #64748b; }
+
+    /* Tier Grid (Empty State) */
+    .tier-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.625rem;
+    }
+    @media (min-width: 520px) {
+      .tier-grid { grid-template-columns: repeat(4, 1fr); }
+    }
+    .tier-tile {
+      border-width: 1px;
+      border-style: solid;
+      border-radius: 1rem;
+      padding: 0.875rem;
+      text-align: left;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+    .tier-tile.active { box-shadow: 0 0 0 2px #0f172a; }
+    .tier-tile-label { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; }
+    .tier-tile-count { font-size: 1.375rem; font-weight: 800; margin-top: 0.15rem; }
+
+    /* Lists */
+    .card-list {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 1rem;
+      overflow: hidden;
+    }
+    .card-list-header {
+      padding: 0.625rem 1rem;
+      border-bottom: 1px solid #f1f5f9;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #64748b;
+    }
+    .list-scroll { max-height: 20rem; overflow-y: auto; }
+    .list-row {
+      width: 100%;
+      background: #ffffff;
+      border: none;
+      border-bottom: 1px solid #f1f5f9;
+      padding: 0.6875rem 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      text-align: left;
+      cursor: pointer;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: #1e293b;
+    }
+    .list-row:last-child { border-bottom: none; }
+    .list-row:hover { background-color: #f8fafc; }
+    .badge-sm {
+      padding: 0.1875rem 0.625rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+
+    /* Buttons */
+    .btn-primary {
+      background-color: #00539B;
+      color: #ffffff;
+      border: none;
+      border-radius: 0.75rem;
+      padding: 0.625rem 1rem;
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .btn-primary:hover { background-color: #00427c; }
+    .btn-secondary {
+      background: #ffffff;
+      color: #334155;
+      border: 1px solid #e2e8f0;
+      border-radius: 0.625rem;
+      padding: 0.4375rem 0.75rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .btn-secondary:hover { background: #f8fafc; }
+
+    /* Modals */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 50;
+      background: rgba(15, 23, 42, 0.45);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+    .modal-card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 1rem;
+      width: 100%;
+      max-width: 26rem;
+      box-shadow: 0 20px 25px -5px rgba(15, 23, 42, 0.15);
+      overflow: hidden;
+    }
+    .modal-head {
+      padding: 0.875rem 1.25rem;
+      border-bottom: 1px solid #f1f5f9;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .modal-title { margin: 0; font-size: 0.875rem; font-weight: 700; }
+    .modal-body { padding: 1.25rem; display: flex; flex-direction: column; gap: 0.875rem; }
+    .field-label { display: block; font-size: 0.75rem; font-weight: 600; color: #334155; margin-bottom: 0.25rem; }
+    .field-input {
+      width: 100%;
+      padding: 0.625rem 0.75rem;
+      border: 1px solid #cbd5e1;
+      border-radius: 0.625rem;
+      font-size: 0.875rem;
+      background: #ffffff;
+      outline: none;
+    }
+    .field-input:focus { border-color: #00539B; box-shadow: 0 0 0 3px rgba(0, 83, 155, 0.12); }
+
+    .guide-item {
+      border-width: 1px;
+      border-style: solid;
+      border-radius: 0.75rem;
+      padding: 0.75rem;
+    }
+    .guide-item p { margin: 0.375rem 0 0; font-size: 0.8125rem; line-height: 1.4; }
+
+    .toast {
+      position: fixed;
+      bottom: 1.25rem;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 60;
+      padding: 0.5rem 1rem;
+      border-radius: 0.75rem;
+      background: #0f172a;
+      color: #ffffff;
+      font-size: 0.75rem;
+      font-weight: 600;
+      box-shadow: 0 10px 15px -3px rgba(15, 23, 42, 0.2);
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="brand-title">
+      <span class="brand-dot"></span>
+      <span>Goodwill Brand Tier</span>
+    </div>
+    <div class="header-actions">
+      <button id="btnTierGuide" type="button" class="link-btn">Tier Guide</button>
+      <button id="btnManage" type="button" class="link-btn">Manage</button>
+    </div>
+  </header>
+
+  <main class="main">
+    <div class="search-wrap">
+      <svg class="search-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M17 11a6 6 0 11-12 0 6 6 0 0112 0z" />
+      </svg>
+      <input
+        id="searchInput"
+        type="text"
+        autocomplete="off"
+        autocapitalize="off"
+        spellcheck="false"
+        placeholder="Type a brand name..."
+        class="search-input"
+      />
+      <button id="btnClearSearch" type="button" aria-label="Clear search" class="clear-btn hidden">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+
+    <section id="resultArea"></section>
+    <section id="otherMatchesArea" class="hidden"></section>
+    <section id="browseArea" class="hidden"></section>
+  </main>
+
+  <!-- Tier Guide Modal -->
+  <div id="tierGuideModal" class="hidden modal-backdrop">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h2 class="modal-title">Quality Tier Guide</h2>
+        <button id="btnCloseTierGuide" type="button" class="link-btn">Close</button>
+      </div>
+      <div class="modal-body" id="tierGuideContent"></div>
+    </div>
+  </div>
+
+  <!-- Manage Modal -->
+  <div id="manageModal" class="hidden modal-backdrop">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h2 class="modal-title">Manage Brands</h2>
+        <button id="btnCloseManage" type="button" class="link-btn">Close</button>
+      </div>
+      <div class="modal-body">
+        <button id="btnOpenAddBrand" type="button" class="btn-primary">+ Add Custom Brand</button>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding-top:10px;border-top:1px solid #f1f5f9;">
+          <span id="manageCountLabel" style="font-size:12px;color:#64748b;">312 brands loaded</span>
+          <div style="display:flex;gap:8px;">
+            <button id="btnExportCsv" type="button" class="btn-secondary">Export CSV</button>
+            <label class="btn-secondary" style="display:inline-block;">
+              Import CSV
+              <input id="csvFileInput" type="file" accept=".csv,text/csv" class="hidden" />
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add / Edit Brand Modal -->
+  <div id="brandFormModal" class="hidden modal-backdrop">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h2 id="brandFormTitle" class="modal-title">Add Brand</h2>
+        <button id="btnCloseBrandForm" type="button" class="link-btn">Close</button>
+      </div>
+      <form id="brandForm" class="modal-body">
+        <input type="hidden" id="editBrandId" value="" />
+        <div>
+          <label for="inputBrandName" class="field-label">Brand Name</label>
+          <input id="inputBrandName" type="text" required placeholder="e.g., Patagonia" class="field-input" />
+        </div>
+        <div>
+          <label for="inputBrandTier" class="field-label">Quality Tier</label>
+          <select id="inputBrandTier" required class="field-input">
+            <option value="Good">Good</option>
+            <option value="Better">Better</option>
+            <option value="Best">Best</option>
+            <option value="Specialty">Specialty</option>
+          </select>
+        </div>
+        <div>
+          <label for="inputBrandNotes" class="field-label">Notes (optional)</label>
+          <input id="inputBrandNotes" type="text" placeholder="Optional pricing note" class="field-input" />
+        </div>
+        <div style="display:flex;justify-content:flex-end;gap:8px;padding-top:4px;">
+          <button id="btnCancelBrandForm" type="button" class="btn-secondary">Cancel</button>
+          <button type="submit" class="btn-primary">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="toast" class="hidden toast"></div>
+
+  <script>
+    const TIER_DEFINITIONS = {
+      Good: "Entry-level, everyday value brands (example: Wild Fable).",
+      Better: "Mid-tier mall and standard retail brands (examples: American Eagle, Aerie, Aeropostale).",
+      Best: "Premium mall, popular athletic, and higher-demand brands (examples: Lululemon, Free People).",
+      Specialty: "Niche, vintage, or unique high-value labels. Judged case by case."
+    };
+
+    const STORAGE_KEY_CUSTOM = "goodwill_brand_tier_custom_v2";
+    const DEFAULT_BRANDS = [{"id": 1, "brand": "A New Day", "tier": "Good", "notes": "", "custom": false}, {"id": 55, "brand": "Abercrombie & Fitch", "tier": "Best", "notes": "", "custom": false}, {"id": 142, "brand": "Adidas", "tier": "Best", "notes": "", "custom": false}, {"id": 59, "brand": "Adolfo", "tier": "Better", "notes": "", "custom": false}, {"id": 56, "brand": "Adrienne Vittadini", "tier": "Better", "notes": "", "custom": false}, {"id": 57, "brand": "Aerie", "tier": "Better", "notes": "", "custom": false}, {"id": 58, "brand": "Aeropostale", "tier": "Best", "notes": "", "custom": false}, {"id": 143, "brand": "Alex and Ani", "tier": "Best", "notes": "", "custom": false}, {"id": 236, "brand": "Alexander McQueen", "tier": "Specialty", "notes": "", "custom": false}, {"id": 235, "brand": "Alexander Wang", "tier": "Specialty", "notes": "", "custom": false}, {"id": 60, "brand": "Alfani", "tier": "Best", "notes": "", "custom": false}, {"id": 61, "brand": "Alfred Dunner", "tier": "Better", "notes": "", "custom": false}, {"id": 237, "brand": "Alice + Olivia", "tier": "Specialty", "notes": "", "custom": false}, {"id": 2, "brand": "All In Motion", "tier": "Good", "notes": "", "custom": false}, {"id": 238, "brand": "All Saints", "tier": "Specialty", "notes": "", "custom": false}, {"id": 239, "brand": "Ally Capellino", "tier": "Specialty", "notes": "", "custom": false}, {"id": 3, "brand": "Amazon Essentials", "tier": "Good", "notes": "", "custom": false}, {"id": 62, "brand": "American Eagle", "tier": "Best", "notes": "", "custom": false}, {"id": 4, "brand": "And1", "tier": "Good", "notes": "", "custom": false}, {"id": 145, "brand": "Ann Taylor", "tier": "Best", "notes": "", "custom": false}, {"id": 144, "brand": "Anne Klein", "tier": "Best", "notes": "", "custom": false}, {"id": 146, "brand": "Anthropologie", "tier": "Specialty", "notes": "", "custom": false}, {"id": 147, "brand": "Antonio Melani", "tier": "Best", "notes": "", "custom": false}, {"id": 63, "brand": "Apt. 9", "tier": "Best", "notes": "", "custom": false}, {"id": 240, "brand": "Armani", "tier": "Specialty", "notes": "", "custom": false}, {"id": 148, "brand": "Armani Exchange", "tier": "Best", "notes": "", "custom": false}, {"id": 64, "brand": "Arrow", "tier": "Better", "notes": "", "custom": false}, {"id": 65, "brand": "Athleta", "tier": "Best", "notes": "", "custom": false}, {"id": 5, "brand": "Athletic Works", "tier": "Good", "notes": "", "custom": false}, {"id": 6, "brand": "Avia", "tier": "Good", "notes": "", "custom": false}, {"id": 241, "brand": "B. Makowsky", "tier": "Specialty", "notes": "", "custom": false}, {"id": 7, "brand": "Baby Phat", "tier": "Good", "notes": "", "custom": false}, {"id": 242, "brand": "Baggalini", "tier": "Specialty", "notes": "", "custom": false}, {"id": 149, "brand": "Banana Republic", "tier": "Best", "notes": "", "custom": false}, {"id": 150, "brand": "BCBG Max Azria", "tier": "Best", "notes": "", "custom": false}, {"id": 66, "brand": "BCX", "tier": "Better", "notes": "", "custom": false}, {"id": 8, "brand": "Berkley Jensen", "tier": "Good", "notes": "", "custom": false}, {"id": 67, "brand": "Betsey Johnson", "tier": "Best", "notes": "", "custom": false}, {"id": 9, "brand": "Beverly Hills/U.S Polo", "tier": "Good", "notes": "", "custom": false}, {"id": 68, "brand": "Big Buddha", "tier": "Better", "notes": "", "custom": false}, {"id": 69, "brand": "Billabong", "tier": "Best", "notes": "", "custom": false}, {"id": 151, "brand": "Bisou Bisou", "tier": "Best", "notes": "", "custom": false}, {"id": 70, "brand": "Blair", "tier": "Better", "notes": "", "custom": false}, {"id": 10, "brand": "Bobbie & Brooks", "tier": "Good", "notes": "", "custom": false}, {"id": 71, "brand": "Boca", "tier": "Better", "notes": "", "custom": false}, {"id": 72, "brand": "Bongo", "tier": "Good", "notes": "", "custom": false}, {"id": 73, "brand": "BonWorth", "tier": "Good", "notes": "", "custom": false}, {"id": 243, "brand": "Bottega Veneta", "tier": "Specialty", "notes": "", "custom": false}, {"id": 244, "brand": "Brahmin", "tier": "Specialty", "notes": "", "custom": false}, {"id": 152, "brand": "Brighton", "tier": "Specialty", "notes": "", "custom": false}, {"id": 245, "brand": "Buffalo David Bitton", "tier": "Specialty", "notes": "", "custom": false}, {"id": 246, "brand": "Burberry", "tier": "Specialty", "notes": "", "custom": false}, {"id": 11, "brand": "Burt's Bees", "tier": "Good", "notes": "", "custom": false}, {"id": 153, "brand": "Cabi / Max Studio", "tier": "Best", "notes": "", "custom": false}, {"id": 74, "brand": "Cable & Gauge", "tier": "Good", "notes": "", "custom": false}, {"id": 154, "brand": "Cache", "tier": "Best", "notes": "", "custom": false}, {"id": 155, "brand": "Callaway", "tier": "Best", "notes": "", "custom": false}, {"id": 156, "brand": "Calvin Klein", "tier": "Best", "notes": "", "custom": false}, {"id": 247, "brand": "Canada Goose", "tier": "Specialty", "notes": "", "custom": false}, {"id": 12, "brand": "Candie's", "tier": "Good", "notes": "", "custom": false}, {"id": 157, "brand": "Carhartt", "tier": "Best", "notes": "", "custom": false}, {"id": 158, "brand": "Carmen", "tier": "Best", "notes": "", "custom": false}, {"id": 248, "brand": "Carolina Herrera", "tier": "Specialty", "notes": "", "custom": false}, {"id": 13, "brand": "Carter's", "tier": "Good", "notes": "", "custom": false}, {"id": 249, "brand": "Cartier", "tier": "Specialty", "notes": "", "custom": false}, {"id": 14, "brand": "Cat & Jack", "tier": "Good", "notes": "", "custom": false}, {"id": 75, "brand": "Cato", "tier": "Better", "notes": "", "custom": false}, {"id": 250, "brand": "Celine", "tier": "Specialty", "notes": "", "custom": false}, {"id": 76, "brand": "Champion", "tier": "Best", "notes": "", "custom": false}, {"id": 251, "brand": "Chanel", "tier": "Specialty", "notes": "", "custom": false}, {"id": 77, "brand": "CHAPS", "tier": "Better", "notes": "", "custom": false}, {"id": 252, "brand": "Charles Johnson", "tier": "Specialty", "notes": "", "custom": false}, {"id": 15, "brand": "Charlotte Russe", "tier": "Good", "notes": "", "custom": false}, {"id": 78, "brand": "Charter Club", "tier": "Better", "notes": "", "custom": false}, {"id": 16, "brand": "Cherokee", "tier": "Good", "notes": "", "custom": false}, {"id": 159, "brand": "Chico's", "tier": "Best", "notes": "", "custom": false}, {"id": 17, "brand": "Children's Place", "tier": "Good", "notes": "", "custom": false}, {"id": 253, "brand": "Chloe", "tier": "Specialty", "notes": "", "custom": false}, {"id": 254, "brand": "Christian Dior", "tier": "Specialty", "notes": "", "custom": false}, {"id": 255, "brand": "Christian Louboutin", "tier": "Specialty", "notes": "", "custom": false}, {"id": 256, "brand": "Christian Siriano", "tier": "Specialty", "notes": "", "custom": false}, {"id": 79, "brand": "Christopher Banks", "tier": "Better", "notes": "", "custom": false}, {"id": 18, "brand": "Ciro", "tier": "Good", "notes": "", "custom": false}, {"id": 160, "brand": "Citizens of Humanity", "tier": "Specialty", "notes": "", "custom": false}, {"id": 80, "brand": "Claiborne", "tier": "Best", "notes": "", "custom": false}, {"id": 161, "brand": "Coach", "tier": "Specialty", "notes": "", "custom": false}, {"id": 81, "brand": "Coldwater Creek", "tier": "Better", "notes": "", "custom": false}, {"id": 162, "brand": "Cole Haan", "tier": "Best", "notes": "", "custom": false}, {"id": 163, "brand": "Columbia", "tier": "Better", "notes": "", "custom": false}, {"id": 82, "brand": "Converse", "tier": "Better", "notes": "", "custom": false}, {"id": 257, "brand": "Covington", "tier": "Specialty", "notes": "", "custom": false}, {"id": 83, "brand": "Croft & Barrow", "tier": "Better", "notes": "", "custom": false}, {"id": 84, "brand": "Danskin", "tier": "Better", "notes": "", "custom": false}, {"id": 258, "brand": "Diane Von Furstenberg", "tier": "Specialty", "notes": "", "custom": false}, {"id": 85, "brand": "Dickies", "tier": "Better", "notes": "", "custom": false}, {"id": 86, "brand": "Disney", "tier": "Best", "notes": "", "custom": false}, {"id": 87, "brand": "DKNY", "tier": "Best", "notes": "", "custom": false}, {"id": 88, "brand": "Dockers", "tier": "Best", "notes": "", "custom": false}, {"id": 259, "brand": "Dolce & Gabbana", "tier": "Specialty", "notes": "", "custom": false}, {"id": 260, "brand": "Dooney & Bourke", "tier": "Specialty", "notes": "", "custom": false}, {"id": 89, "brand": "Dressbarn", "tier": "Best", "notes": "", "custom": false}, {"id": 90, "brand": "DSG", "tier": "Good", "notes": "", "custom": false}, {"id": 91, "brand": "Ecko Unltd.", "tier": "Better", "notes": "", "custom": false}, {"id": 164, "brand": "Ed Hardy", "tier": "Specialty", "notes": "", "custom": false}, {"id": 165, "brand": "Eddie Bauer", "tier": "Better", "notes": "", "custom": false}, {"id": 261, "brand": "Eileen Fisher", "tier": "Specialty", "notes": "", "custom": false}, {"id": 166, "brand": "Ellen Tracy", "tier": "Best", "notes": "", "custom": false}, {"id": 262, "brand": "Eric Javits", "tier": "Specialty", "notes": "", "custom": false}, {"id": 263, "brand": "Escada", "tier": "Specialty", "notes": "", "custom": false}, {"id": 92, "brand": "Everlast", "tier": "Better", "notes": "", "custom": false}, {"id": 167, "brand": "Express", "tier": "Best", "notes": "", "custom": false}, {"id": 168, "brand": "Fashion Nova", "tier": "Best", "notes": "", "custom": false}, {"id": 264, "brand": "Fendi", "tier": "Specialty", "notes": "", "custom": false}, {"id": 93, "brand": "Fila", "tier": "Better", "notes": "", "custom": false}, {"id": 169, "brand": "Firm Abs", "tier": "Best", "notes": "", "custom": false}, {"id": 265, "brand": "Flying Monkey", "tier": "Specialty", "notes": "", "custom": false}, {"id": 19, "brand": "Forever 21", "tier": "Good", "notes": "", "custom": false}, {"id": 94, "brand": "Fossil", "tier": "Better", "notes": "", "custom": false}, {"id": 170, "brand": "Fred Perry", "tier": "Best", "notes": "", "custom": false}, {"id": 171, "brand": "Free People", "tier": "Best", "notes": "", "custom": false}, {"id": 266, "brand": "French Connection", "tier": "Specialty", "notes": "", "custom": false}, {"id": 20, "brand": "Fruit of the Loom", "tier": "Good", "notes": "", "custom": false}, {"id": 95, "brand": "Gap", "tier": "Better", "notes": "", "custom": false}, {"id": 21, "brand": "George", "tier": "Good", "notes": "", "custom": false}, {"id": 172, "brand": "Gibson and Latimer", "tier": "Specialty", "notes": "", "custom": false}, {"id": 22, "brand": "Gildan", "tier": "Good", "notes": "", "custom": false}, {"id": 267, "brand": "Givenchy", "tier": "Specialty", "notes": "", "custom": false}, {"id": 173, "brand": "Good American", "tier": "Specialty", "notes": "", "custom": false}, {"id": 23, "brand": "Goodfellow & Co.", "tier": "Good", "notes": "", "custom": false}, {"id": 268, "brand": "Goyard", "tier": "Specialty", "notes": "", "custom": false}, {"id": 312, "brand": "Granimals", "tier": "Good", "notes": "", "custom": false}, {"id": 96, "brand": "Greg Norman", "tier": "Best", "notes": "", "custom": false}, {"id": 269, "brand": "Gucci", "tier": "Specialty", "notes": "", "custom": false}, {"id": 97, "brand": "Guess", "tier": "Best", "notes": "", "custom": false}, {"id": 24, "brand": "Gymboree", "tier": "Good", "notes": "", "custom": false}, {"id": 98, "brand": "H&M/Divided", "tier": "Better", "notes": "", "custom": false}, {"id": 99, "brand": "Haggar", "tier": "Better", "notes": "", "custom": false}, {"id": 25, "brand": "Hanes", "tier": "Good", "notes": "", "custom": false}, {"id": 270, "brand": "Helmut Lang", "tier": "Specialty", "notes": "", "custom": false}, {"id": 271, "brand": "Henri Bendel", "tier": "Specialty", "notes": "", "custom": false}, {"id": 272, "brand": "Hermes", "tier": "Specialty", "notes": "", "custom": false}, {"id": 273, "brand": "Hobo", "tier": "Specialty", "notes": "", "custom": false}, {"id": 100, "brand": "Hollister", "tier": "Best", "notes": "", "custom": false}, {"id": 101, "brand": "Hugo Boss", "tier": "Best", "notes": "", "custom": false}, {"id": 174, "brand": "Hunter", "tier": "Best", "notes": "", "custom": false}, {"id": 102, "brand": "Hurley", "tier": "Best", "notes": "", "custom": false}, {"id": 175, "brand": "Inc", "tier": "Best", "notes": "", "custom": false}, {"id": 176, "brand": "Iris", "tier": "Better", "notes": "", "custom": false}, {"id": 103, "brand": "Isaac Mizrahi", "tier": "Better", "notes": "", "custom": false}, {"id": 274, "brand": "Isabella Fiore", "tier": "Specialty", "notes": "", "custom": false}, {"id": 177, "brand": "Ivanka Trump/Donald Trump", "tier": "Best", "notes": "", "custom": false}, {"id": 104, "brand": "IZOD", "tier": "Best", "notes": "", "custom": false}, {"id": 276, "brand": "J Brand", "tier": "Specialty", "notes": "", "custom": false}, {"id": 178, "brand": "J. Crew", "tier": "Best", "notes": "", "custom": false}, {"id": 275, "brand": "J. Jill", "tier": "Specialty", "notes": "", "custom": false}, {"id": 105, "brand": "Janie & Jack", "tier": "Best", "notes": "", "custom": false}, {"id": 106, "brand": "Jessica Simpson", "tier": "Better", "notes": "", "custom": false}, {"id": 107, "brand": "Jockey", "tier": "Better", "notes": "", "custom": false}, {"id": 277, "brand": "Joe's Jeans", "tier": "Specialty", "notes": "", "custom": false}, {"id": 278, "brand": "John John", "tier": "Specialty", "notes": "", "custom": false}, {"id": 279, "brand": "Joie", "tier": "Specialty", "notes": "", "custom": false}, {"id": 179, "brand": "Jones New York", "tier": "Best", "notes": "", "custom": false}, {"id": 108, "brand": "Jos A. Bank", "tier": "Better", "notes": "", "custom": false}, {"id": 180, "brand": "Juicy Couture", "tier": "Best", "notes": "", "custom": false}, {"id": 109, "brand": "Justice", "tier": "Good", "notes": "", "custom": false}, {"id": 181, "brand": "Karen Kane", "tier": "Best", "notes": "", "custom": false}, {"id": 26, "brand": "Karen Scott", "tier": "Better", "notes": "", "custom": false}, {"id": 280, "brand": "Karl Lagerfeld Paris", "tier": "Specialty", "notes": "", "custom": false}, {"id": 281, "brand": "Kate Spade", "tier": "Specialty", "notes": "", "custom": false}, {"id": 110, "brand": "Keds", "tier": "Better", "notes": "", "custom": false}, {"id": 182, "brand": "Kendall & Kylie", "tier": "Best", "notes": "", "custom": false}, {"id": 183, "brand": "Kendra Scott", "tier": "Best", "notes": "", "custom": false}, {"id": 184, "brand": "Kenneth Cole", "tier": "Specialty", "notes": "", "custom": false}, {"id": 185, "brand": "Kensie", "tier": "Better", "notes": "", "custom": false}, {"id": 27, "brand": "Kim Rogers", "tier": "Better", "notes": "", "custom": false}, {"id": 282, "brand": "Kiton", "tier": "Specialty", "notes": "", "custom": false}, {"id": 186, "brand": "Lacoste", "tier": "Specialty", "notes": "", "custom": false}, {"id": 111, "brand": "Lands End", "tier": "Best", "notes": "", "custom": false}, {"id": 187, "brand": "Lane Bryant/Venezia", "tier": "Best", "notes": "", "custom": false}, {"id": 28, "brand": "Laura Ashley", "tier": "Good", "notes": "", "custom": false}, {"id": 112, "brand": "Lauren Conrad", "tier": "Better", "notes": "", "custom": false}, {"id": 113, "brand": "Lee", "tier": "Better", "notes": "", "custom": false}, {"id": 114, "brand": "Levi's", "tier": "Best", "notes": "", "custom": false}, {"id": 283, "brand": "Lia Sophia", "tier": "Specialty", "notes": "", "custom": false}, {"id": 284, "brand": "Lilly Pulitzer", "tier": "Specialty", "notes": "", "custom": false}, {"id": 188, "brand": "Limited", "tier": "Best", "notes": "", "custom": false}, {"id": 29, "brand": "Limited Two", "tier": "Good", "notes": "", "custom": false}, {"id": 189, "brand": "Liverpool Jeans Company", "tier": "Best", "notes": "", "custom": false}, {"id": 115, "brand": "Liz Claiborne", "tier": "Better", "notes": "", "custom": false}, {"id": 190, "brand": "LL Bean", "tier": "Best", "notes": "", "custom": false}, {"id": 191, "brand": "Loft", "tier": "Best", "notes": "", "custom": false}, {"id": 192, "brand": "Longchamp", "tier": "Best", "notes": "", "custom": false}, {"id": 285, "brand": "Loro Piana", "tier": "Specialty", "notes": "", "custom": false}, {"id": 286, "brand": "Louis Vuitton", "tier": "Specialty", "notes": "", "custom": false}, {"id": 193, "brand": "Lucky Brand", "tier": "Best", "notes": "", "custom": false}, {"id": 116, "brand": "Lularoe", "tier": "Good", "notes": "", "custom": false}, {"id": 194, "brand": "Lululemon", "tier": "Specialty", "notes": "", "custom": false}, {"id": 287, "brand": "Maeve by Anthropologie", "tier": "Specialty", "notes": "", "custom": false}, {"id": 288, "brand": "Marc Jacobs", "tier": "Specialty", "notes": "", "custom": false}, {"id": 195, "brand": "Marc New York/Andrew Marc", "tier": "Best", "notes": "", "custom": false}, {"id": 196, "brand": "Margaret M", "tier": "Best", "notes": "", "custom": false}, {"id": 289, "brand": "Marmot", "tier": "Specialty", "notes": "", "custom": false}, {"id": 117, "brand": "Maurices", "tier": "Better", "notes": "", "custom": false}, {"id": 290, "brand": "Max Mara", "tier": "Specialty", "notes": "", "custom": false}, {"id": 197, "brand": "MCM", "tier": "Best", "notes": "", "custom": false}, {"id": 30, "brand": "Member's Mark", "tier": "Good", "notes": "", "custom": false}, {"id": 31, "brand": "Merona", "tier": "Good", "notes": "", "custom": false}, {"id": 291, "brand": "Michael Kors", "tier": "Specialty", "notes": "", "custom": false}, {"id": 292, "brand": "Miss Me Jeans", "tier": "Specialty", "notes": "", "custom": false}, {"id": 198, "brand": "Mod Ref", "tier": "Best", "notes": "", "custom": false}, {"id": 199, "brand": "Monsoon", "tier": "Best", "notes": "", "custom": false}, {"id": 32, "brand": "Mossimo", "tier": "Good", "notes": "", "custom": false}, {"id": 118, "brand": "Mudd", "tier": "Good", "notes": "", "custom": false}, {"id": 200, "brand": "Naked Wardrobe", "tier": "Best", "notes": "", "custom": false}, {"id": 33, "brand": "Nautica", "tier": "Better", "notes": "", "custom": false}, {"id": 293, "brand": "Neiman Marcus", "tier": "Best", "notes": "", "custom": false}, {"id": 119, "brand": "New Balance", "tier": "Better", "notes": "", "custom": false}, {"id": 34, "brand": "New York & Company", "tier": "Better", "notes": "", "custom": false}, {"id": 201, "brand": "Nike", "tier": "Best", "notes": "", "custom": false}, {"id": 35, "brand": "No Boundaries", "tier": "Good", "notes": "", "custom": false}, {"id": 202, "brand": "North Face", "tier": "Specialty", "notes": "", "custom": false}, {"id": 120, "brand": "O'Neill", "tier": "Better", "notes": "", "custom": false}, {"id": 203, "brand": "Oakley", "tier": "Best", "notes": "", "custom": false}, {"id": 36, "brand": "Old Navy", "tier": "Good", "notes": "", "custom": false}, {"id": 204, "brand": "Orvis", "tier": "Best", "notes": "", "custom": false}, {"id": 121, "brand": "OshKosh", "tier": "Better", "notes": "", "custom": false}, {"id": 294, "brand": "Paige", "tier": "Specialty", "notes": "", "custom": false}, {"id": 295, "brand": "Pandora", "tier": "Specialty", "notes": "", "custom": false}, {"id": 37, "brand": "Papaya", "tier": "Good", "notes": "", "custom": false}, {"id": 296, "brand": "Patagonia", "tier": "Specialty", "notes": "", "custom": false}, {"id": 205, "brand": "Paul Smith", "tier": "Best", "notes": "", "custom": false}, {"id": 122, "brand": "Perry Ellis", "tier": "Better", "notes": "", "custom": false}, {"id": 206, "brand": "Peter Millar", "tier": "Specialty", "notes": "", "custom": false}, {"id": 38, "brand": "Pink Rose", "tier": "Good", "notes": "", "custom": false}, {"id": 297, "brand": "Pistola", "tier": "Specialty", "notes": "", "custom": false}, {"id": 123, "brand": "Port Authority", "tier": "Good", "notes": "", "custom": false}, {"id": 298, "brand": "Prada", "tier": "Specialty", "notes": "", "custom": false}, {"id": 207, "brand": "Psycho Bunny", "tier": "Specialty", "notes": "", "custom": false}, {"id": 208, "brand": "Puma", "tier": "Best", "notes": "", "custom": false}, {"id": 124, "brand": "Quiksilver", "tier": "Best", "notes": "", "custom": false}, {"id": 209, "brand": "Ralph Lauren", "tier": "Best", "notes": "", "custom": false}, {"id": 39, "brand": "Rampage", "tier": "Good", "notes": "", "custom": false}, {"id": 299, "brand": "Ray-Ban", "tier": "Specialty", "notes": "", "custom": false}, {"id": 125, "brand": "RBX", "tier": "Better", "notes": "", "custom": false}, {"id": 300, "brand": "Rebecca Minkoff", "tier": "Specialty", "notes": "", "custom": false}, {"id": 126, "brand": "Reebok", "tier": "Better", "notes": "", "custom": false}, {"id": 210, "brand": "Reel Legends", "tier": "Best", "notes": "", "custom": false}, {"id": 127, "brand": "Rewash", "tier": "Good", "notes": "", "custom": false}, {"id": 211, "brand": "Richard Harris", "tier": "Best", "notes": "", "custom": false}, {"id": 128, "brand": "Rocawear", "tier": "Better", "notes": "", "custom": false}, {"id": 301, "brand": "Rockrivle", "tier": "Specialty", "notes": "", "custom": false}, {"id": 129, "brand": "Roundtree and Yorke", "tier": "Better", "notes": "", "custom": false}, {"id": 130, "brand": "Roxy", "tier": "Best", "notes": "", "custom": false}, {"id": 131, "brand": "Ruby Rd", "tier": "Better", "notes": "", "custom": false}, {"id": 40, "brand": "Rue 21", "tier": "Good", "notes": "", "custom": false}, {"id": 132, "brand": "Sag Harbor", "tier": "Good", "notes": "", "custom": false}, {"id": 212, "brand": "Saks Fifth Avenue", "tier": "Best", "notes": "", "custom": false}, {"id": 302, "brand": "Salvatore Ferragamo", "tier": "Specialty", "notes": "", "custom": false}, {"id": 213, "brand": "Sam Edelman", "tier": "Best", "notes": "", "custom": false}, {"id": 214, "brand": "Sean John", "tier": "Best", "notes": "", "custom": false}, {"id": 41, "brand": "Secret Treasures", "tier": "Good", "notes": "", "custom": false}, {"id": 42, "brand": "SHEIN", "tier": "Good", "notes": "", "custom": false}, {"id": 215, "brand": "Simply Vera Wang", "tier": "Best", "notes": "", "custom": false}, {"id": 43, "brand": "SJS", "tier": "Good", "notes": "", "custom": false}, {"id": 44, "brand": "Sonoma", "tier": "Good", "notes": "", "custom": false}, {"id": 216, "brand": "Southern Tide", "tier": "Best", "notes": "", "custom": false}, {"id": 45, "brand": "St. Johns Bay", "tier": "Good", "notes": "", "custom": false}, {"id": 46, "brand": "Starter", "tier": "Good", "notes": "", "custom": false}, {"id": 303, "brand": "Stella McCartney", "tier": "Specialty", "notes": "", "custom": false}, {"id": 133, "brand": "Style & Co.", "tier": "Better", "notes": "", "custom": false}, {"id": 217, "brand": "Supreme", "tier": "Best", "notes": "", "custom": false}, {"id": 218, "brand": "Tahari", "tier": "Best", "notes": "", "custom": false}, {"id": 219, "brand": "Talbots", "tier": "Best", "notes": "", "custom": false}, {"id": 304, "brand": "Ted Baker", "tier": "Specialty", "notes": "", "custom": false}, {"id": 47, "brand": "Terra & Sky", "tier": "Good", "notes": "", "custom": false}, {"id": 134, "brand": "The Limited", "tier": "Best", "notes": "", "custom": false}, {"id": 220, "brand": "Theory", "tier": "Specialty", "notes": "", "custom": false}, {"id": 221, "brand": "Timberland", "tier": "Best", "notes": "", "custom": false}, {"id": 48, "brand": "Time and Tru", "tier": "Good", "notes": "", "custom": false}, {"id": 305, "brand": "Tom Ford", "tier": "Specialty", "notes": "", "custom": false}, {"id": 222, "brand": "Tommy Hilfiger", "tier": "Best", "notes": "", "custom": false}, {"id": 135, "brand": "Topshop", "tier": "Better", "notes": "", "custom": false}, {"id": 223, "brand": "Torrid", "tier": "Best", "notes": "", "custom": false}, {"id": 306, "brand": "Tory Burch", "tier": "Specialty", "notes": "", "custom": false}, {"id": 136, "brand": "Town Craft", "tier": "Better", "notes": "", "custom": false}, {"id": 224, "brand": "True Religion", "tier": "Specialty", "notes": "", "custom": false}, {"id": 307, "brand": "Ugg", "tier": "Specialty", "notes": "", "custom": false}, {"id": 225, "brand": "Under Armour", "tier": "Best", "notes": "", "custom": false}, {"id": 49, "brand": "Union Bay", "tier": "Good", "notes": "", "custom": false}, {"id": 50, "brand": "Universal Thread", "tier": "Good", "notes": "", "custom": false}, {"id": 226, "brand": "Urban Outfitters/BDG", "tier": "Best", "notes": "", "custom": false}, {"id": 308, "brand": "Valentino", "tier": "Specialty", "notes": "", "custom": false}, {"id": 137, "brand": "Van Heusen", "tier": "Best", "notes": "", "custom": false}, {"id": 227, "brand": "Vans", "tier": "Best", "notes": "", "custom": false}, {"id": 228, "brand": "Vera Bradley", "tier": "Best", "notes": "", "custom": false}, {"id": 309, "brand": "Versace", "tier": "Specialty", "notes": "", "custom": false}, {"id": 229, "brand": "Victoria Secret/Pink", "tier": "Best", "notes": "", "custom": false}, {"id": 310, "brand": "Vince", "tier": "Specialty", "notes": "", "custom": false}, {"id": 230, "brand": "Vince Camuto", "tier": "Best", "notes": "", "custom": false}, {"id": 231, "brand": "Vineyard Vines", "tier": "Best", "notes": "", "custom": false}, {"id": 138, "brand": "Volcom", "tier": "Better", "notes": "", "custom": false}, {"id": 232, "brand": "White House Black Market", "tier": "Best", "notes": "", "custom": false}, {"id": 51, "brand": "Wild Fable", "tier": "Good", "notes": "", "custom": false}, {"id": 52, "brand": "Wonder Nation", "tier": "Good", "notes": "", "custom": false}, {"id": 139, "brand": "Worthington", "tier": "Better", "notes": "", "custom": false}, {"id": 233, "brand": "Wrangler", "tier": "Better", "notes": "", "custom": false}, {"id": 53, "brand": "Xhilaration", "tier": "Good", "notes": "", "custom": false}, {"id": 140, "brand": "XOXO", "tier": "Better", "notes": "", "custom": false}, {"id": 54, "brand": "XXI", "tier": "Good", "notes": "", "custom": false}, {"id": 311, "brand": "Yves Saint Laurent", "tier": "Specialty", "notes": "", "custom": false}, {"id": 234, "brand": "Zara", "tier": "Best", "notes": "", "custom": false}, {"id": 141, "brand": "Zoo York", "tier": "Better", "notes": "", "custom": false}];
+
+    let state = {
+      brands: [],
+      search: "",
+      selectedId: null,
+      browseTier: null
+    };
+
+    function normalizeText(str) {
+      return (str || "")
+        .toLowerCase()
+        .replace(/&/g, " and ")
+        .replace(/['’`".\-_/]/g, "")
+        .replace(/\s+/g, " ")
+        .trim();
+    }
+
+    function escapeHtml(str) {
+      return String(str || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+
+    function loadState() {
+      let overrides = {};
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY_CUSTOM);
+        if (raw) overrides = JSON.parse(raw);
+      } catch (e) {}
+
+      const merged = DEFAULT_BRANDS.map((b) => {
+        const ov = overrides[String(b.id)];
+        return ov ? { ...b, ...ov } : { ...b };
+      });
+      const customAdditions = Array.isArray(overrides._added) ? overrides._added : [];
+      state.brands = [...merged, ...customAdditions];
+    }
+
+    function saveOverrides() {
+      const overrides = { _added: [] };
+      const defaultMap = new Map(DEFAULT_BRANDS.map((b) => [b.id, b]));
+      for (const b of state.brands) {
+        if (b.custom && !defaultMap.has(b.id)) {
+          overrides._added.push(b);
+        } else {
+          const orig = defaultMap.get(b.id);
+          if (orig && (orig.brand !== b.brand || orig.tier !== b.tier || orig.notes !== b.notes)) {
+            overrides[String(b.id)] = { brand: b.brand, tier: b.tier, notes: b.notes, edited: true };
+          }
+        }
+      }
+      try {
+        localStorage.setItem(STORAGE_KEY_CUSTOM, JSON.stringify(overrides));
+      } catch (e) {}
+    }
+
+    let toastTimer = null;
+    function showToast(msg) {
+      const el = document.getElementById("toast");
+      el.textContent = msg;
+      el.classList.remove("hidden");
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => el.classList.add("hidden"), 2200);
+    }
+
+    function scoreMatch(brandName, queryNorm) {
+      const nameNorm = normalizeText(brandName);
+      if (!queryNorm) return 0;
+      if (nameNorm === queryNorm) return 100;
+      if (nameNorm.startsWith(queryNorm)) return 80;
+      if (nameNorm.split(" ").some((w) => w.startsWith(queryNorm))) return 60;
+      if (nameNorm.includes(queryNorm)) return 40;
+      return 0;
+    }
+
+    function getMatches() {
+      const qNorm = normalizeText(state.search);
+      if (!qNorm) return [];
+      const matches = state.brands.filter((b) => scoreMatch(b.brand, qNorm) > 0);
+      matches.sort((a, b) => {
+        const sa = scoreMatch(a.brand, qNorm);
+        const sb = scoreMatch(b.brand, qNorm);
+        if (sb !== sa) return sb - sa;
+        return a.brand.localeCompare(b.brand);
+      });
+      return matches;
+    }
+
+    function getTierClasses(tier) {
+      const k = (tier || "Good").toLowerCase();
+      return { card: `tier-${k}`, badge: `badge-${k}` };
+    }
+
+    function render() {
+      const q = state.search.trim();
+      document.getElementById("btnClearSearch").classList.toggle("hidden", state.search.length === 0);
+      document.getElementById("manageCountLabel").textContent = `${state.brands.length} brands loaded`;
+
+      const resultArea = document.getElementById("resultArea");
+      const otherArea = document.getElementById("otherMatchesArea");
+      const browseArea = document.getElementById("browseArea");
+
+      const matches = getMatches();
+      let activeBrand = null;
+      if (state.selectedId !== null) {
+        activeBrand = state.brands.find((b) => b.id === state.selectedId) || null;
+      } else if (matches.length > 0) {
+        activeBrand = matches[0];
+      }
+
+      if (!q && !activeBrand) {
+        otherArea.classList.add("hidden");
+        const counts = { Good: 0, Better: 0, Best: 0, Specialty: 0 };
+        for (const b of state.brands) {
+          if (counts[b.tier] !== undefined) counts[b.tier]++;
+        }
+
+        resultArea.innerHTML = `
+          <div class="tier-grid">
+            ${["Good", "Better", "Best", "Specialty"]
+              .map((t) => {
+                const cls = getTierClasses(t);
+                const isActive = state.browseTier === t;
+                return `
+                  <button
+                    type="button"
+                    data-browse-tier="${t}"
+                    class="tier-tile ${cls.card} ${isActive ? "active" : ""}"
+                  >
+                    <div class="tier-tile-label">${t}</div>
+                    <div class="tier-tile-count">${counts[t]}</div>
+                  </button>
+                `;
+              })
+              .join("")}
+          </div>
+        `;
+
+        if (state.browseTier) {
+          const list = state.brands
+            .filter((b) => b.tier === state.browseTier)
+            .sort((a, b) => a.brand.localeCompare(b.brand));
+          browseArea.classList.remove("hidden");
+          browseArea.innerHTML = `
+            <div class="card-list">
+              <div class="card-list-header">
+                <span>${state.browseTier} (${list.length})</span>
+                <button id="btnCloseBrowse" type="button" class="link-btn">Close</button>
+              </div>
+              <div class="list-scroll">
+                ${list
+                  .map(
+                    (b) => `
+                    <button type="button" data-pick-id="${b.id}" class="list-row">
+                      <span>${escapeHtml(b.brand)}</span>
+                      <span style="font-size:12px;color:#94a3b8;">Select</span>
+                    </button>
+                  `
+                  )
+                  .join("")}
+              </div>
+            </div>
+          `;
+        } else {
+          browseArea.classList.add("hidden");
+          browseArea.innerHTML = "";
+        }
+        return;
+      }
+
+      browseArea.classList.add("hidden");
+
+      if (!activeBrand && q) {
+        otherArea.classList.add("hidden");
+        resultArea.innerHTML = `
+          <div class="not-found-card">
+            <span class="not-found-badge">Not in list</span>
+            <h2 class="not-found-title">"${escapeHtml(q)}"</h2>
+            <p class="not-found-sub">Judge case-by-case using the Tier Guide, or save it locally.</p>
+            <button id="btnAddMissing" type="button" class="btn-primary">+ Add "${escapeHtml(q)}"</button>
+          </div>
+        `;
+        document.getElementById("btnAddMissing").addEventListener("click", () => openBrandModal(null, q));
+        return;
+      }
+
+      const cls = getTierClasses(activeBrand.tier);
+      resultArea.innerHTML = `
+        <div class="result-card ${cls.card}">
+          <div class="result-top">
+            <span>${escapeHtml(activeBrand.brand)}</span>
+            <button id="btnEditActive" type="button" class="edit-link">Edit</button>
+          </div>
+          <div>
+            <span class="tier-pill-lg ${cls.badge}">${escapeHtml(activeBrand.tier)}</span>
+          </div>
+          <p class="result-def">${escapeHtml(TIER_DEFINITIONS[activeBrand.tier] || "")}</p>
+          ${activeBrand.notes ? `<div class="result-note">${escapeHtml(activeBrand.notes)}</div>` : ""}
+        </div>
+      `;
+      document.getElementById("btnEditActive").addEventListener("click", () => openBrandModal(activeBrand.id));
+
+      const others = matches.filter((b) => b.id !== activeBrand.id).slice(0, 6);
+      if (others.length > 0) {
+        otherArea.classList.remove("hidden");
+        otherArea.innerHTML = `
+          <div class="card-list">
+            ${others
+              .map((b) => {
+                const bCls = getTierClasses(b.tier);
+                return `
+                  <button type="button" data-pick-id="${b.id}" class="list-row">
+                    <span>${escapeHtml(b.brand)}</span>
+                    <span class="badge-sm ${bCls.badge}">${escapeHtml(b.tier)}</span>
+                  </button>
+                `;
+              })
+              .join("")}
+          </div>
+        `;
+      } else {
+        otherArea.classList.add("hidden");
+        otherArea.innerHTML = "";
+      }
+    }
+
+    function openBrandModal(brandId = null, prefillName = "") {
+      const modal = document.getElementById("brandFormModal");
+      const title = document.getElementById("brandFormTitle");
+      const idInput = document.getElementById("editBrandId");
+      const nameInput = document.getElementById("inputBrandName");
+      const tierInput = document.getElementById("inputBrandTier");
+      const notesInput = document.getElementById("inputBrandNotes");
+
+      if (brandId !== null) {
+        const b = state.brands.find((x) => x.id === brandId);
+        if (!b) return;
+        title.textContent = "Edit Brand";
+        idInput.value = String(b.id);
+        nameInput.value = b.brand;
+        tierInput.value = b.tier;
+        notesInput.value = b.notes || "";
+      } else {
+        title.textContent = "Add Brand";
+        idInput.value = "";
+        nameInput.value = prefillName;
+        tierInput.value = "Better";
+        notesInput.value = "";
+      }
+      modal.classList.remove("hidden");
+      nameInput.focus();
+    }
+
+    function closeBrandModal() {
+      document.getElementById("brandFormModal").classList.add("hidden");
+    }
+
+    function renderTierGuide() {
+      document.getElementById("tierGuideContent").innerHTML = ["Good", "Better", "Best", "Specialty"]
+        .map((t) => {
+          const cls = getTierClasses(t);
+          return `
+            <div class="guide-item ${cls.card}">
+              <span class="badge-sm ${cls.badge}" style="text-transform:uppercase;">${t}</span>
+              <p>${escapeHtml(TIER_DEFINITIONS[t])}</p>
+            </div>
+          `;
+        })
+        .join("");
+    }
+
+    function exportCatalogCsv() {
+      const header = ["Brand", "Tier", "Notes"];
+      const rows = state.brands.map((b) => [
+        `"${(b.brand || "").replace(/"/g, '""')}"`,
+        `"${(b.tier || "").replace(/"/g, '""')}"`,
+        `"${(b.notes || "").replace(/"/g, '""')}"`
+      ]);
+      const csv = [header.join(","), ...rows.map((r) => r.join(","))].join("\n");
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "goodwill_brand_tiers_export.csv";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast("Exported CSV");
+    }
+
+    function parseCsvLine(line) {
+      const result = [];
+      let cur = "";
+      let inQuotes = false;
+      for (let i = 0; i < line.length; i++) {
+        const ch = line[i];
+        if (ch === '"') {
+          if (inQuotes && line[i + 1] === '"') {
+            cur += '"';
+            i++;
+          } else {
+            inQuotes = !inQuotes;
+          }
+        } else if (ch === "," && !inQuotes) {
+          result.push(cur.trim());
+          cur = "";
+        } else {
+          cur += ch;
+        }
+      }
+      result.push(cur.trim());
+      return result;
+    }
+
+    function handleCsvImport(file) {
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        const lines = String(ev.target.result || "").split(/\r?\n/).filter((l) => l.trim().length > 0);
+        if (lines.length < 2) {
+          showToast("CSV is empty");
+          return;
+        }
+        const validTiers = new Set(["Good", "Better", "Best", "Specialty"]);
+        const imported = [];
+        for (let i = 1; i < lines.length; i++) {
+          const cols = parseCsvLine(lines[i]);
+          const brand = (cols[0] || "").trim();
+          const tierRaw = (cols[1] || "").trim();
+          const tier = validTiers.has(tierRaw) ? tierRaw : "Good";
+          const notes = (cols[2] || "").trim();
+          if (brand) imported.push({ id: 10000 + i, brand, tier, notes, custom: true });
+        }
+        if (imported.length === 0) {
+          showToast("No valid rows found");
+          return;
+        }
+        state.brands = imported;
+        state.selectedId = null;
+        saveOverrides();
+        document.getElementById("manageModal").classList.add("hidden");
+        render();
+        showToast(`Imported ${imported.length} brands`);
+      };
+      reader.readAsText(file);
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      loadState();
+      renderTierGuide();
+      render();
+
+      const searchInput = document.getElementById("searchInput");
+      searchInput.focus();
+
+      searchInput.addEventListener("input", (e) => {
+        state.search = e.target.value;
+        state.selectedId = null;
+        state.browseTier = null;
+        render();
+      });
+
+      document.getElementById("btnClearSearch").addEventListener("click", () => {
+        state.search = "";
+        state.selectedId = null;
+        searchInput.value = "";
+        searchInput.focus();
+        render();
+      });
+
+      document.addEventListener("click", (e) => {
+        const tierBtn = e.target.closest("[data-browse-tier]");
+        if (tierBtn) {
+          const t = tierBtn.getAttribute("data-browse-tier");
+          state.browseTier = state.browseTier === t ? null : t;
+          render();
+          return;
+        }
+        if (e.target.closest("#btnCloseBrowse")) {
+          state.browseTier = null;
+          render();
+          return;
+        }
+        const pickBtn = e.target.closest("[data-pick-id]");
+        if (pickBtn) {
+          state.selectedId = Number(pickBtn.getAttribute("data-pick-id"));
+          const b = state.brands.find((x) => x.id === state.selectedId);
+          if (b) {
+            state.search = b.brand;
+            searchInput.value = b.brand;
+          }
+          render();
+        }
+      });
+
+      document.getElementById("btnTierGuide").addEventListener("click", () => {
+        document.getElementById("tierGuideModal").classList.remove("hidden");
+      });
+      document.getElementById("btnCloseTierGuide").addEventListener("click", () => {
+        document.getElementById("tierGuideModal").classList.add("hidden");
+      });
+      document.getElementById("tierGuideModal").addEventListener("click", (e) => {
+        if (e.target.id === "tierGuideModal") document.getElementById("tierGuideModal").classList.add("hidden");
+      });
+
+      document.getElementById("btnManage").addEventListener("click", () => {
+        document.getElementById("manageModal").classList.remove("hidden");
+      });
+      document.getElementById("btnCloseManage").addEventListener("click", () => {
+        document.getElementById("manageModal").classList.add("hidden");
+      });
+      document.getElementById("manageModal").addEventListener("click", (e) => {
+        if (e.target.id === "manageModal") document.getElementById("manageModal").classList.add("hidden");
+      });
+      document.getElementById("btnOpenAddBrand").addEventListener("click", () => {
+        document.getElementById("manageModal").classList.add("hidden");
+        openBrandModal(null, state.search.trim());
+      });
+
+      document.getElementById("btnCloseBrandForm").addEventListener("click", closeBrandModal);
+      document.getElementById("btnCancelBrandForm").addEventListener("click", closeBrandModal);
+      document.getElementById("brandFormModal").addEventListener("click", (e) => {
+        if (e.target.id === "brandFormModal") closeBrandModal();
+      });
+
+      document.getElementById("brandForm").addEventListener("submit", (e) => {
+        e.preventDefault();
+        const idRaw = document.getElementById("editBrandId").value;
+        const brand = document.getElementById("inputBrandName").value.trim();
+        const tier = document.getElementById("inputBrandTier").value;
+        const notes = document.getElementById("inputBrandNotes").value.trim();
+        if (!brand) return;
+
+        if (idRaw) {
+          const id = Number(idRaw);
+          const idx = state.brands.findIndex((x) => x.id === id);
+          if (idx !== -1) {
+            state.brands[idx] = { ...state.brands[idx], brand, tier, notes, edited: true };
+            state.selectedId = id;
+          }
+          showToast(`Updated ${brand} → ${tier}`);
+        } else {
+          const newId = Date.now();
+          state.brands.unshift({ id: newId, brand, tier, notes, custom: true });
+          state.selectedId = newId;
+          state.search = brand;
+          searchInput.value = brand;
+          showToast(`Added ${brand} (${tier})`);
+        }
+        saveOverrides();
+        closeBrandModal();
+        render();
+      });
+
+      document.getElementById("btnExportCsv").addEventListener("click", exportCatalogCsv);
+      document.getElementById("csvFileInput").addEventListener("change", (e) => {
+        handleCsvImport(e.target.files[0]);
+        e.target.value = "";
+      });
+
+      document.addEventListener("keydown", (e) => {
+        const activeTag = document.activeElement ? document.activeElement.tagName : "";
+        if (e.key === "/" && activeTag !== "INPUT" && activeTag !== "TEXTAREA") {
+          e.preventDefault();
+          searchInput.focus();
+          searchInput.select();
+        } else if (e.key === "Escape") {
+          document.getElementById("tierGuideModal").classList.add("hidden");
+          document.getElementById("manageModal").classList.add("hidden");
+          closeBrandModal();
+          if (activeTag === "INPUT" && state.search) {
+            state.search = "";
+            state.selectedId = null;
+            searchInput.value = "";
+            render();
+          }
+        }
+      });
+    });
+  </script>
+</body>
+</html>
