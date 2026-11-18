@@ -28,7 +28,9 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
+      gap: 0.5rem;
     }
+    .header.wide { max-width: 68rem; }
     .brand-title {
       display: flex;
       align-items: center;
@@ -48,7 +50,7 @@
     .header-actions {
       display: flex;
       align-items: center;
-      gap: 0.75rem;
+      gap: 0.625rem;
     }
     .link-btn {
       background: none;
@@ -60,6 +62,7 @@
       cursor: pointer;
     }
     .link-btn:hover { color: #0f172a; }
+    .link-btn.active { color: #00539B; text-decoration: underline; text-underline-offset: 3px; }
 
     /* Main */
     .main {
@@ -72,6 +75,7 @@
       flex-direction: column;
       gap: 1rem;
     }
+    .main.wide { max-width: 68rem; }
 
     /* Search */
     .search-wrap { position: relative; }
@@ -274,14 +278,98 @@
       font-weight: 700;
     }
 
+    /* Full List / Print View */
+    .print-toolbar {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 1rem;
+      padding: 0.75rem 1rem;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+    }
+    .print-sheet {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 1rem;
+      padding: 1.25rem;
+    }
+    .print-sheet-header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      border-bottom: 2px solid #0f172a;
+      padding-bottom: 0.5rem;
+      margin-bottom: 1rem;
+    }
+    .print-sheet-title { margin: 0; font-size: 1.125rem; font-weight: 800; }
+    .print-sheet-meta { font-size: 0.75rem; color: #64748b; font-weight: 600; }
+    .print-columns {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1rem;
+    }
+    @media (min-width: 640px) {
+      .print-columns { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (min-width: 900px) {
+      .print-columns { grid-template-columns: repeat(4, 1fr); }
+    }
+    .print-col {
+      border: 1px solid #e2e8f0;
+      border-radius: 0.75rem;
+      overflow: hidden;
+    }
+    .print-col-head {
+      padding: 0.5rem 0.75rem;
+      font-size: 0.8125rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    .print-col-list {
+      list-style: none;
+      margin: 0;
+      padding: 0.375rem 0.75rem;
+      font-size: 0.75rem;
+      line-height: 1.5;
+    }
+    .print-col-list li {
+      border-bottom: 1px solid #f1f5f9;
+      padding: 0.1875rem 0;
+    }
+    .print-col-list li:last-child { border-bottom: none; }
+    .print-note { color: #64748b; font-style: italic; }
+
+    @media print {
+      body { background: #ffffff; color: #000000; }
+      .no-print { display: none !important; }
+      .main, .main.wide { max-width: 100%; padding: 0; margin: 0; }
+      .print-sheet { border: none; padding: 0; }
+      .print-columns {
+        grid-template-columns: repeat(4, 1fr) !important;
+        gap: 0.5rem !important;
+      }
+      .print-col { border: 1px solid #94a3b8; border-radius: 4px; break-inside: auto; }
+      .print-col-head { -webkit-print-color-adjust: exact; print-color-adjust: exact; font-size: 10pt; padding: 4px 6px; }
+      .print-col-list { font-size: 8pt; line-height: 1.3; padding: 2px 6px; }
+      .print-col-list li { padding: 1.5px 0; }
+    }
+
     /* Buttons */
     .btn-primary {
       background-color: #00539B;
       color: #ffffff;
       border: none;
       border-radius: 0.75rem;
-      padding: 0.625rem 1rem;
-      font-size: 0.875rem;
+      padding: 0.5625rem 0.9375rem;
+      font-size: 0.8125rem;
       font-weight: 600;
       cursor: pointer;
     }
@@ -364,45 +452,61 @@
   </style>
 </head>
 <body>
-  <header class="header">
+  <header id="appHeader" class="header no-print">
     <div class="brand-title">
       <span class="brand-dot"></span>
       <span>Goodwill Brand Tier</span>
     </div>
     <div class="header-actions">
+      <button id="btnFullList" type="button" class="link-btn">Full List / Print</button>
       <button id="btnTierGuide" type="button" class="link-btn">Tier Guide</button>
       <button id="btnManage" type="button" class="link-btn">Manage</button>
     </div>
   </header>
 
-  <main class="main">
-    <div class="search-wrap">
-      <svg class="search-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M17 11a6 6 0 11-12 0 6 6 0 0112 0z" />
-      </svg>
-      <input
-        id="searchInput"
-        type="text"
-        autocomplete="off"
-        autocapitalize="off"
-        spellcheck="false"
-        placeholder="Type a brand name..."
-        class="search-input"
-      />
-      <button id="btnClearSearch" type="button" aria-label="Clear search" class="clear-btn hidden">
-        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+  <main id="appMain" class="main">
+    <!-- Lookup View -->
+    <div id="lookupView" class="no-print" style="display:flex;flex-direction:column;gap:1rem;">
+      <div class="search-wrap">
+        <svg class="search-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M17 11a6 6 0 11-12 0 6 6 0 0112 0z" />
         </svg>
-      </button>
+        <input
+          id="searchInput"
+          type="text"
+          autocomplete="off"
+          autocapitalize="off"
+          spellcheck="false"
+          placeholder="Type a brand name..."
+          class="search-input"
+        />
+        <button id="btnClearSearch" type="button" aria-label="Clear search" class="clear-btn hidden">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <section id="resultArea"></section>
+      <section id="otherMatchesArea" class="hidden"></section>
+      <section id="browseArea" class="hidden"></section>
     </div>
 
-    <section id="resultArea"></section>
-    <section id="otherMatchesArea" class="hidden"></section>
-    <section id="browseArea" class="hidden"></section>
+    <!-- Printable Full List View -->
+    <div id="printView" class="hidden" style="display:flex;flex-direction:column;gap:0.875rem;">
+      <div class="print-toolbar no-print">
+        <button id="btnBackLookup" type="button" class="btn-secondary">← Back to Lookup</button>
+        <div style="display:flex;align-items:center;gap:0.5rem;">
+          <button id="btnPrintExportCsv" type="button" class="btn-secondary">Download CSV</button>
+          <button id="btnPrintSheet" type="button" class="btn-primary">Print Sheet</button>
+        </div>
+      </div>
+      <div id="printSheetContainer" class="print-sheet"></div>
+    </div>
   </main>
 
   <!-- Tier Guide Modal -->
-  <div id="tierGuideModal" class="hidden modal-backdrop">
+  <div id="tierGuideModal" class="hidden modal-backdrop no-print">
     <div class="modal-card">
       <div class="modal-head">
         <h2 class="modal-title">Quality Tier Guide</h2>
@@ -413,7 +517,7 @@
   </div>
 
   <!-- Manage Modal -->
-  <div id="manageModal" class="hidden modal-backdrop">
+  <div id="manageModal" class="hidden modal-backdrop no-print">
     <div class="modal-card">
       <div class="modal-head">
         <h2 class="modal-title">Manage Brands</h2>
@@ -436,7 +540,7 @@
   </div>
 
   <!-- Add / Edit Brand Modal -->
-  <div id="brandFormModal" class="hidden modal-backdrop">
+  <div id="brandFormModal" class="hidden modal-backdrop no-print">
     <div class="modal-card">
       <div class="modal-head">
         <h2 id="brandFormTitle" class="modal-title">Add Brand</h2>
@@ -469,7 +573,7 @@
     </div>
   </div>
 
-  <div id="toast" class="hidden toast"></div>
+  <div id="toast" class="hidden toast no-print"></div>
 
   <script>
     const TIER_DEFINITIONS = {
@@ -486,7 +590,8 @@
       brands: [],
       search: "",
       selectedId: null,
-      browseTier: null
+      browseTier: null,
+      viewMode: "lookup"
     };
 
     function normalizeText(str) {
@@ -576,10 +681,67 @@
       return { card: `tier-${k}`, badge: `badge-${k}` };
     }
 
+    function renderPrintSheet() {
+      const container = document.getElementById("printSheetContainer");
+      const tiers = ["Good", "Better", "Best", "Specialty"];
+      const grouped = { Good: [], Better: [], Best: [], Specialty: [] };
+      for (const b of state.brands) {
+        if (grouped[b.tier]) grouped[b.tier].push(b);
+      }
+      for (const t of tiers) {
+        grouped[t].sort((a, b) => a.brand.localeCompare(b.brand));
+      }
+
+      container.innerHTML = `
+        <div class="print-sheet-header">
+          <h1 class="print-sheet-title">Goodwill Brand Recognition</h1>
+          <span class="print-sheet-meta">${state.brands.length} brands</span>
+        </div>
+        <div class="print-columns">
+          ${tiers
+            .map((t) => {
+              const cls = getTierClasses(t);
+              const items = grouped[t];
+              return `
+                <div class="print-col">
+                  <div class="print-col-head ${cls.card}">
+                    <span>${t}</span>
+                    <span>${items.length}</span>
+                  </div>
+                  <ul class="print-col-list">
+                    ${items
+                      .map(
+                        (b) =>
+                          `<li>${escapeHtml(b.brand)}${
+                            b.notes ? ` <span class="print-note">(${escapeHtml(b.notes)})</span>` : ""
+                          }</li>`
+                      )
+                      .join("")}
+                  </ul>
+                </div>
+              `;
+            })
+            .join("")}
+        </div>
+      `;
+    }
+
     function render() {
+      const isPrint = state.viewMode === "print";
+      document.getElementById("appHeader").classList.toggle("wide", isPrint);
+      document.getElementById("appMain").classList.toggle("wide", isPrint);
+      document.getElementById("lookupView").classList.toggle("hidden", isPrint);
+      document.getElementById("printView").classList.toggle("hidden", !isPrint);
+      document.getElementById("btnFullList").classList.toggle("active", isPrint);
+      document.getElementById("manageCountLabel").textContent = `${state.brands.length} brands loaded`;
+
+      if (isPrint) {
+        renderPrintSheet();
+        return;
+      }
+
       const q = state.search.trim();
       document.getElementById("btnClearSearch").classList.toggle("hidden", state.search.length === 0);
-      document.getElementById("manageCountLabel").textContent = `${state.brands.length} brands loaded`;
 
       const resultArea = document.getElementById("resultArea");
       const otherArea = document.getElementById("otherMatchesArea");
@@ -854,6 +1016,18 @@
         render();
       });
 
+      document.getElementById("btnFullList").addEventListener("click", () => {
+        state.viewMode = state.viewMode === "print" ? "lookup" : "print";
+        render();
+      });
+      document.getElementById("btnBackLookup").addEventListener("click", () => {
+        state.viewMode = "lookup";
+        render();
+        searchInput.focus();
+      });
+      document.getElementById("btnPrintSheet").addEventListener("click", () => window.print());
+      document.getElementById("btnPrintExportCsv").addEventListener("click", exportCatalogCsv);
+
       document.addEventListener("click", (e) => {
         const tierBtn = e.target.closest("[data-browse-tier]");
         if (tierBtn) {
@@ -946,7 +1120,7 @@
 
       document.addEventListener("keydown", (e) => {
         const activeTag = document.activeElement ? document.activeElement.tagName : "";
-        if (e.key === "/" && activeTag !== "INPUT" && activeTag !== "TEXTAREA") {
+        if (e.key === "/" && activeTag !== "INPUT" && activeTag !== "TEXTAREA" && state.viewMode === "lookup") {
           e.preventDefault();
           searchInput.focus();
           searchInput.select();
